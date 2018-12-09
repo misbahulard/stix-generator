@@ -44,7 +44,7 @@ def sdo_to_dict(sdo):
 
 if __name__ == "__main__":
 
-    client = MongoClient('mongodb://localhost:27017')
+    client = MongoClient('mongodb://10.252.108.98:27017')
 
     db = client['stix']
     event_coll = db['event']
