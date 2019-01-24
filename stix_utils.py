@@ -127,7 +127,7 @@ def to_threat_actor(r):
     geoip = lookup_ip(ip)
     if geoip['city'] == 'PRIVATE':
         name = 'Internal threat actor'
-        desc = 'Threat actor from internal system'
+        desc = 'Threat actor from internal system | ' + ip
     else:
         name = geoip['country'] + ' threat actor'
         desc = 'Threat actor from ' + geoip['city'] + ', ' + geoip['country'] + ' | ' + ip
