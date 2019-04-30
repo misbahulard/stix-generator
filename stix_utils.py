@@ -20,38 +20,107 @@ def to_observed_data(r):
     last_observed = datetime.fromtimestamp(temp_last)
     number_observed = int(r["number_observed"])
 
-    observed = stix2.ObservedData(
-        id="observed-data--" + uid,
-        created=created,
-        modified=modified,
-        first_observed=first_observed,
-        last_observed=last_observed,
-        number_observed=number_observed,
-        objects=
-        {
-            "0": {
-                "type": "ipv4-addr",
-                "value": r["src_ip"]
-            },
-            "1": {
-                "type": "ipv4-addr",
-                "value": r["dest_ip"]
-            },
-            "2": {
-                "type": "network-traffic",
-                "src_ref": "0",
-                "dst_ref": "1",
-                # "src_port": r["src_port"],
-                "dst_port": r["dest_port"],
-                "protocols": [
-                    "ipv4",
-                    r["protocol"]
-                ],
+    if type(r["src_ip"]) == list:
+        observed = stix2.ObservedData(
+            id="observed-data--" + uid,
+            created=created,
+            modified=modified,
+            first_observed=first_observed,
+            last_observed=last_observed,
+            number_observed=number_observed,
+            objects=
+            {
+                "0": {
+                    "type": "ipv4-addr",
+                    "value": " ".join(r["src_ip"])
+                },
+                "1": {
+                    "type": "ipv4-addr",
+                    "value": r["dest_ip"]
+                },
+                "2": {
+                    "type": "network-traffic",
+                    "src_ref": "0",
+                    "dst_ref": "1",
+                    # "src_port": r["src_port"],
+                    "dst_port": r["dest_port"],
+                    "protocols": [
+                        "ipv4",
+                        r["protocol"]
+                    ],
+                }
             }
-        }
-    )
+        )
 
-    return observed
+        return observed
+        # for src_ip in r["src_ip"]:
+        #     observed = stix2.ObservedData(
+        #         id="observed-data--" + uid,
+        #         created=created,
+        #         modified=modified,
+        #         first_observed=first_observed,
+        #         last_observed=last_observed,
+        #         number_observed=number_observed,
+        #         objects=
+        #         {
+        #             "0": {
+        #                 "type": "ipv4-addr",
+        #                 "value": src_ip
+        #             },
+        #             "1": {
+        #                 "type": "ipv4-addr",
+        #                 "value": r["dest_ip"]
+        #             },
+        #             "2": {
+        #                 "type": "network-traffic",
+        #                 "src_ref": "0",
+        #                 "dst_ref": "1",
+        #                 "dst_port": r["dest_port"],
+        #                 "protocols": [
+        #                     "ipv4",
+        #                     r["protocol"]
+        #                 ],
+        #             }
+        #         }
+        #     )
+
+        #     observed_list.append(observed)
+
+        # return observed_list
+
+    else:
+        observed = stix2.ObservedData(
+            id="observed-data--" + uid,
+            created=created,
+            modified=modified,
+            first_observed=first_observed,
+            last_observed=last_observed,
+            number_observed=number_observed,
+            objects=
+            {
+                "0": {
+                    "type": "ipv4-addr",
+                    "value": r["src_ip"]
+                },
+                "1": {
+                    "type": "ipv4-addr",
+                    "value": r["dest_ip"]
+                },
+                "2": {
+                    "type": "network-traffic",
+                    "src_ref": "0",
+                    "dst_ref": "1",
+                    # "src_port": r["src_port"],
+                    "dst_port": r["dest_port"],
+                    "protocols": [
+                        "ipv4",
+                        r["protocol"]
+                    ],
+                }
+            }
+        )
+
+        return observed
 
 
 def to_indicator(r):
@@ -66,22 +135,40 @@ def to_indicator(r):
     src_ip = r['src_ip']
     dst_ip = r['dest_ip']
 
-    indicator = stix2.Indicator(
-        id="indicator--" + uid,
-        created=created,
-        modified=modified,
-        name="Malicious Network Flow",
-        description="Malicious IP: " + src_ip + " detected.",
-        labels=["malicious-activity"],
-        pattern="[network-traffic:src_ref.type = '"
-                + src_type + "' AND network-traffic:src_ref.value = '"
-                + src_ip + "'] AND [network-traffic:dst_ref.type = '"
-                + dst_type + "' AND network-traffic:dst_ref.value = '"
-                + dst_ip + "'] REPEATS " + str(r['number_observed']) + " TIMES",
-        valid_from=valid_from
-    )
+    if type(r["src_ip"]) == list:
+        indicator = stix2.Indicator(
+            id="indicator--" + uid,
+            created=created,
+            modified=modified,
+            name="Malicious Network Flow",
+            description="Malicious IP: " + " ".join(src_ip) + " detected.",
+            labels=["malicious-activity"],
+            pattern="[network-traffic:src_ref.type = '"
+                    + src_type + "' AND network-traffic:src_ref.value = '"
+                    + " ".join(src_ip) + "'] AND [network-traffic:dst_ref.type = '"
+                    + dst_type + "' AND network-traffic:dst_ref.value = '"
+                    + dst_ip + "'] REPEATS " + str(r['number_observed']) + " TIMES",
+            valid_from=valid_from
+        )
 
-    return indicator
+        return indicator
+    else:
+        indicator = stix2.Indicator(
+            id="indicator--" + uid,
+            created=created,
+            modified=modified,
+            name="Malicious Network Flow",
+            description="Malicious IP: " + src_ip + " detected.",
+            labels=["malicious-activity"],
+            pattern="[network-traffic:src_ref.type = '"
+                    + src_type + "' AND network-traffic:src_ref.value = '"
+                    + src_ip + "'] AND [network-traffic:dst_ref.type = '"
+                    + dst_type + "' AND network-traffic:dst_ref.value = '"
+                    + dst_ip + "'] REPEATS " + str(r['number_observed']) + " TIMES",
+            valid_from=valid_from
+        )
+
+        return indicator
 
 
 def to_identity(r, target=False):
@@ -91,29 +178,77 @@ def to_identity(r, target=False):
     created = datetime.now()
     modified = created
 
-    if target:
-        ip = r['dest_ip']
+    if type(r["src_ip"]) == list:
+        identity_list = []
+        if target:
+            ip = r['dest_ip']
+            geoip = lookup_ip(ip)
+            if geoip['city'] == 'PRIVATE':
+                    name = 'Internal system'
+                    desc = 'identity from internal | ' + ip
+            else:
+                name = geoip['country'] + ' generic'
+                desc = 'Individual identity from ' + geoip['city'] + ', ' + geoip['country'] + ' | ' + ip
+
+            identity = stix2.Identity(
+                id="identity--" + uid,
+                created=created,
+                modified=modified,
+                name=name,
+                description=desc,
+                identity_class="individual"
+            )
+
+            return identity
+        else:
+            for src_ip in r["src_ip"]:
+                uid = str(uuid.uuid4())
+                ip = src_ip
+                geoip = lookup_ip(ip)
+
+                if geoip['city'] == 'PRIVATE':
+                    name = 'Internal system'
+                    desc = 'identity from internal | ' + ip
+                else:
+                    name = geoip['country'] + ' generic'
+                    desc = 'Individual identity from ' + geoip['city'] + ', ' + geoip['country'] + ' | ' + ip
+
+                identity = stix2.Identity(
+                    id="identity--" + uid,
+                    created=created,
+                    modified=modified,
+                    name=name,
+                    description=desc,
+                    identity_class="individual"
+                )
+
+                identity_list.append(identity)
+
+            return identity_list
     else:
-        ip = r['src_ip']
-    geoip = lookup_ip(ip)
+        if target:
+            ip = r['dest_ip']
+        else:
+            ip = r['src_ip']
+        geoip = lookup_ip(ip)
 
-    if geoip['city'] == 'PRIVATE':
-        name = 'Internal system'
-        desc = 'identity from internal | ' + ip
-    else:
-        name = geoip['country'] + ' generic'
-        desc = 'Individual identity from ' + geoip['city'] + ', ' + geoip['country'] + ' | ' + ip
+        if geoip['city'] == 'PRIVATE':
+            name = 'Internal system'
+            desc = 'identity from internal | ' + ip
+        else:
+            name = geoip['country'] + ' generic'
+            desc = 'Individual identity from ' + geoip['city'] + ', ' + geoip['country'] + ' | ' + ip
 
-    identity = stix2.Identity(
-        id="identity--" + uid,
-        created=created,
-        modified=modified,
-        name=name,
-        description=desc,
-        identity_class="individual"
-    )
+        identity = stix2.Identity(
+            id="identity--" + uid,
+            created=created,
+            modified=modified,
+            name=name,
+            description=desc,
+            identity_class="individual"
+        )
 
-    return identity
+        return identity
 
 
 def to_threat_actor(r):
@@ -123,25 +258,51 @@ def to_threat_actor(r):
     created = datetime.now()
     modified = created
 
-    ip = r['src_ip']
-    geoip = lookup_ip(ip)
-    if geoip['city'] == 'PRIVATE':
-        name = 'Internal threat actor'
-        desc = 'Threat actor from internal system | ' + ip
+    if type(r["src_ip"]) == list:
+        threat_actor_list = []
+        for src_ip in r["src_ip"]:
+            uid = str(uuid.uuid4())
+            ip = src_ip
+            geoip = lookup_ip(ip)
+            if geoip['city'] == 'PRIVATE':
+                name = 'Internal threat actor'
+                desc = 'Threat actor from internal system | ' + ip
+            else:
+                name = geoip['country'] + ' threat actor'
+                desc = 'Threat actor from ' + geoip['city'] + ', ' + geoip['country'] + ' | ' + ip
+
+            threat_actor = stix2.ThreatActor(
+                id="threat-actor--" + uid,
+                created=created,
+                modified=modified,
+                name=name,
+                description=desc,
+                labels=["crime-syndicate"]
+            )
+
+            threat_actor_list.append(threat_actor)
+
+        return threat_actor_list
     else:
-        name = geoip['country'] + ' threat actor'
-        desc = 'Threat actor from ' + geoip['city'] + ', ' + geoip['country'] + ' | ' + ip
+        ip = r['src_ip']
+        geoip = lookup_ip(ip)
+        if geoip['city'] == 'PRIVATE':
+            name = 'Internal threat actor'
+            desc = 'Threat actor from internal system | ' + ip
+        else:
+            name = geoip['country'] + ' threat actor'
+            desc = 'Threat actor from ' + geoip['city'] + ', ' + geoip['country'] + ' | ' + ip
 
-    threat_actor = stix2.ThreatActor(
-        id="threat-actor--" + uid,
-        created=created,
-        modified=modified,
-        name=name,
-        description=desc,
-        labels=["crime-syndicate"]
-    )
+        threat_actor = stix2.ThreatActor(
+            id="threat-actor--" + uid,
+            created=created,
+            modified=modified,
+            name=name,
+            description=desc,
+            labels=["crime-syndicate"]
+        )
 
-    return threat_actor
+        return threat_actor
 
 
 def to_attack_pattern(r):
@@ -151,8 +312,14 @@ def to_attack_pattern(r):
     created = datetime.now()
     modified = created
 
-    name = r['alert_msg']
-    desc = 'attack from ' + r['src_ip'] + ' to ' + r['dest_ip']
+    if type(r["src_ip"]) == list:
+        name = r['alert_msg']
+        desc = 'attack from ' + " ".join(r['src_ip']) + ' to ' + r['dest_ip']
+    else:
+        name = r['alert_msg']
+        desc = 'attack from ' + r['src_ip'] + ' to ' + r['dest_ip']
+    
+
 
     attack_pattern = stix2.AttackPattern(
         id="attack-pattern--" + uid,
@@ -166,8 +333,24 @@ def to_attack_pattern(r):
 
 
 def to_relationship(obj1, relation, obj2):
-    relationship = stix2.Relationship(obj1, relation, obj2)
-    return relationship
+    if type(obj1) == list:
+        if type(obj2) != list:
+            relationship_list = []
+            for index in range(len(obj1)):
+                relationship = stix2.Relationship(obj1[index], relation, obj2)
+                relationship_list.append(relationship)
+
+            return relationship_list    
+        else:
+            relationship_list = []
+            for index in range(len(obj1)):
+                relationship = stix2.Relationship(obj1[index], relation, obj2[index])
+                relationship_list.append(relationship)
+
+            return relationship_list
+    else:
+        relationship = stix2.Relationship(obj1, relation, obj2)
+        return relationship
 
 
 def to_bundle(obj):
