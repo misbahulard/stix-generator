@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     client = MongoClient('mongodb://localhost:27017')
 
-    db = client['stix_test']
+    db = client['stix_live_2']
     event_coll = db['event']
     observed_data_coll = db['observed_data']
     indicator_coll = db['indicator']

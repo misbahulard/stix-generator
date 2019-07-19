@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     client = MongoClient('mongodb://localhost:27017')
 
-    db = client['stix_live']
+    db = client['stix_pcap']
     event_coll = db['event']
     observed_data_coll = db['observed_data_ddos']
     indicator_coll = db['indicator_ddos']
@@ -51,11 +51,11 @@ if __name__ == "__main__":
     for event in events:
         uniq_event.append([event['dest_ip'], event['dest_port'], event['protocol'], event['alert_msg']])
 
-    print(len(uniq_event))
+    # print(len(uniq_event))
 
     uniq_event_processed = list(set(map(tuple, uniq_event)))
 
-    print(len(uniq_event_processed))
+    # print(len(uniq_event_processed))
 
     uniq_event_processed = map(list, uniq_event_processed) 
     label = ['dest_ip', 'dest_port', 'protocol', 'alert_msg', 'src_ip', 'first_observed', 'last_observed', 'number_observed']
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         uniq.append(0)
         uniq_objects.append(dict(zip(label, uniq)))
 
-    print(uniq_objects[0])
+    # print(uniq_objects[0])
 
     for event in events:
         for obj in uniq_objects:
